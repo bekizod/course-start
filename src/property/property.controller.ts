@@ -1,9 +1,10 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Get, HttpCode, Headers, Param, ParseBoolPipe, ParseIntPipe, Patch, Post, Query, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Headers, Param, ParseBoolPipe, ParseIntPipe, Patch, Post, Query, ValidationPipe, Delete } from '@nestjs/common';
 import { CreatePropertyDto } from './createProperty.dto';
 import { IdParamDto } from './idParam.dto';
 import { HeadersDto } from './dto/headers.dto';
 import { PropertyService } from './property.service';
+import { updatePropertyDto } from './dto/updateProperty.dto';
 
 
 @Controller('property')
@@ -14,6 +15,10 @@ export class PropertyController {
         return this.propertyService.findAll();
     }
 
+    @Get(':id')
+    findOne(@Param('id', ParseIntPipe) id) {
+        return this.propertyService.findOne(id)
+    }
     @Post()
     @HttpCode(202) // Optional: Set the status code for the response
     
@@ -37,7 +42,12 @@ export class PropertyController {
 
 
     @Patch(':id')
-    update(@Param() param: IdParamDto, @Body() body: CreatePropertyDto, @Headers("host") header:HeadersDto) {
-        return header;
+    update(@Param('id', ParseIntPipe) id: number, @Body() body: updatePropertyDto) {
+        console.log('Received update request for property ID:', id, 'with body:', body);
+        return this.propertyService.update(id, body);
     }
-}
+    @Delete(':id')
+    delete(@Param('id', ParseIntPipe) id) {
+        return this.propertyService.delete(id)
+    }
+} 

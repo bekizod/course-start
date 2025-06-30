@@ -1,4 +1,4 @@
-import { IsInt, IsNumber, IsString, Length } from 'class-validator';
+import { IsInt, IsNumber, IsPositive, IsString, Length } from 'class-validator';
 export class CreatePropertyDto {
   @IsString()
   @Length(3,7,{message: 'Name must be between 3 and 7 characters long'})
@@ -6,6 +6,7 @@ export class CreatePropertyDto {
   @IsString()
   description: string;
 
-  @IsInt()
-  area: number;
+  // @IsInt()
+  // @IsPositive()
+  // price: number;
 }
