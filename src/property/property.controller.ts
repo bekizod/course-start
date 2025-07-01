@@ -7,12 +7,13 @@ import { PropertyService } from './property.service';
 import { updatePropertyDto } from './dto/updateProperty.dto';
 
 
-@Controller('property')
+@Controller('v1/property')
 export class PropertyController {
     constructor(private propertyService: PropertyService) {}
     @Get()
-    findAll() {
-        return this.propertyService.findAll();
+    findAll(@Query() query
+    ) {
+        return this.propertyService.findAll(query);
     }
 
     @Get(':id')

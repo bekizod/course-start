@@ -11,7 +11,6 @@ import { Property } from 'src/entities/property.entity';
     {
       provide: APP_PIPE,
       useValue: new ValidationPipe({
-        
         whitelist: true,
         transform: true,
         transformOptions: {

@@ -1,5 +1,10 @@
 // src/filters/validation.filter.ts
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from '@nestjs/common';
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+} from '@nestjs/common';
 import { Response } from 'express';
 
 @Catch(HttpException)
@@ -14,8 +19,8 @@ export class ValidationFilter implements ExceptionFilter {
       // Transform the default NestJS validation error format
       const messages = exceptionResponse['message'] as string[];
       const formattedErrors = {};
-      
-      messages.forEach(message => {
+
+      messages.forEach((message) => {
         // Extract field name from message (simple approach)
         const fieldMatch = message.match(/^([a-zA-Z0-9]+) /);
         if (fieldMatch) {
@@ -26,6 +31,8 @@ export class ValidationFilter implements ExceptionFilter {
 
       response.status(status).json({
         statusCode: status,
+        status: false,
+        message: 'Validation failed',
         errors: formattedErrors,
       });
     } else {
