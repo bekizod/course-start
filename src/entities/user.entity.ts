@@ -1,11 +1,26 @@
-import { BeforeInsert, Column, Entity, PrimaryColumn } from 'typeorm';
+import {
+  BeforeInsert,
+  Column,
+  Entity,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 
 @Entity()
 export class User {
-  @PrimaryColumn()
-  id: string; // Changed to string type
+  @PrimaryGeneratedColumn()
+  id: number; // Changed to string type
+
+  @Column({ unique: true })
+  userName: string;
+
+  @Column()
+  firstName: string;
+
+  @Column()
+  lastName: string;
 
   @Column({ unique: true })
   email: string;
@@ -13,11 +28,11 @@ export class User {
   @Column()
   password: string;
 
+  @Column({ nullable: true })
+  createdAt: Date;
+
   @BeforeInsert()
   async hashPassword() {
     this.password = await bcrypt.hash(this.password, 10);
-    if (!this.id) {
-      this.id = uuidv4(); // Auto-generate UUID if not provided
-    }
   }
 }

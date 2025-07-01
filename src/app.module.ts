@@ -6,9 +6,20 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { pgConfig } from 'db.config';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [PropertyModule, TypeOrmModule.forRoot(pgConfig), UserModule, AuthModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      // expandVariables: true,
+      // load: [dbConfig, dbConfigProduction],
+    }),
+    PropertyModule,
+    TypeOrmModule.forRoot(pgConfig),
+    UserModule,
+    AuthModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

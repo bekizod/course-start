@@ -27,12 +27,19 @@ export class UserService {
     }
   }
 
-  findAll() {
-    return `This action returns all user`;
+  async findByEmail(email: string) {
+    return this.UserRepo.findOne({
+      where: {
+        email,
+      },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: number) {
+    return await this.UserRepo.findOne({
+      where: {id},
+      select:['id', 'email'],
+      });
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
