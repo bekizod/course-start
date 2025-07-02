@@ -18,4 +18,6 @@ export class PostResponseDto {
 
   @IsNumber()
   commentCount?: number; 
+
+  isLiked?: boolean;
 }

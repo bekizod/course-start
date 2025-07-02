@@ -3,34 +3,51 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import {
   Controller,
-  Get,
+  Post,
+  Body,
   HttpCode,
   HttpStatus,
-  Post,
-  Req,
-  Request,
-  Res,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-// import { AuthGuard } from '@nestjs/passport';
 import { LocalAuthGuard } from './guards/local-auth/local-auth.guard';
-// import { LocalAuthGuard } from './guards/local-auth/local-auth.guard';
-// import { RefreshAuthGuard } from './guards/refresh-auth/refresh-auth.guard';
-// import { JwtAuthGuard } from './guards/jwt-auth/jwt-auth.guard';
-// import { Public } from './decorators/public.decorator';
-// import { GoogleAuthGuard } from './guards/google-auth/google-auth.guard';
+import { LoginDto } from './dto/login.dto';
+import { LoginResponseDto } from './dto/login-response.dto';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-  // @Public()
+
+  @ApiOperation({ summary: 'User login' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Login successful',
+    type: LoginResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Validation error',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Invalid credentials',
+  })
+  @ApiBody({ type: LoginDto })
   @HttpCode(HttpStatus.OK)
-  @UseGuards(LocalAuthGuard)
+  @UseGuards(LocalAuthGuard) // Keep the guard
   @Post('login')
-  async login(@Request() req) {
+  login(@Request() req): LoginResponseDto {
     const token = this.authService.login(req.user.id);
-    // return this.authService.login(req.user.id);
-    return { id: req.user.id, accessToken: token };
+    return {
+      status: 'success',
+      message: 'Login successful',
+      data: {
+        id: req.user.id,
+        accessToken: token,
+      },
+    };
   }
 }

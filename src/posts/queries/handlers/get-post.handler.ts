@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import {
   POST_REPOSITORY,
@@ -7,6 +8,7 @@ import { GetPostQuery } from '../get-post.query';
 import { PostResponseDto } from '../../dto/post-response.dto';
 import { UserResponseDto } from 'src/user/dto/user-response.dto';
 import { Inject } from '@nestjs/common';
+import { PaginatedResponseDto } from 'src/posts/dto/paginated-response.dto';
 
 @QueryHandler(GetPostQuery)
 export class GetPostHandler implements IQueryHandler<GetPostQuery> {
@@ -15,7 +17,9 @@ export class GetPostHandler implements IQueryHandler<GetPostQuery> {
     private readonly postRepository: PostRepository,
   ) {}
 
-  async execute(query: GetPostQuery): Promise<PostResponseDto> {
+  async execute(
+    query: GetPostQuery,
+  ): Promise<PaginatedResponseDto<PostResponseDto[]>> {
     const { id } = query;
     const post = await this.postRepository.findById(id);
 
@@ -23,11 +27,13 @@ export class GetPostHandler implements IQueryHandler<GetPostQuery> {
       throw new Error('Post not found');
     }
 
-    return this.mapToResponseDto(post);
+    return this.formatResponse(
+      this.mapToResponseDto(post),
+      'Post retrieved successfully',
+    );
   }
 
   private mapToResponseDto(post: any): PostResponseDto {
-    
     return {
       id: post.id,
       title: post.title,
@@ -40,6 +46,15 @@ export class GetPostHandler implements IQueryHandler<GetPostQuery> {
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
       likesCount: post.likes ? post.likes.length : 0,
+      commentCount: post.comments ? post.comments.length : 0, // Added comments count
+    };
+  }
+
+  private formatResponse(data: PostResponseDto, message?: string): any {
+    return {
+      status: 'success',
+      message: message || 'Operation successful',
+      data,
     };
   }
 }

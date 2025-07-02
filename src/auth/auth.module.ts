@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-import { Module } from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UserService } from 'src/user/user.service';
@@ -11,6 +11,7 @@ import { JwtModule } from '@nestjs/jwt';
 import jwtConfig from './config/jwt.config';
 import { ConfigModule } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { APP_PIPE } from '@nestjs/core';
 // import jwtConfig from './config/jwt.config';
 // import { ConfigModule } from '@nestjs/config';
 // import { JwtStrategy } from './strategies/jwt.strategy';
@@ -26,10 +27,23 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   ],
   controllers: [AuthController],
   providers: [
+
+
+    {provide: APP_PIPE,
+      useValue: new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        transformOptions: {
+          enableImplicitConversion: true, // Crucial for params
+        },
+        disableErrorMessages: false,
+      })},
     AuthService,
     UserService,
     LocalStrategy,
     JwtStrategy,
+
+
 
     // {
     //   provide: APP_GUARD,
