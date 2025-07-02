@@ -27,13 +27,14 @@ export class GetPostHandler implements IQueryHandler<GetPostQuery> {
   }
 
   private mapToResponseDto(post: any): PostResponseDto {
+    
     return {
       id: post.id,
       title: post.title,
       content: post.content,
       author: {
         id: post.author.id,
-        username: post.author.username,
+        username: post.author.userName,
         email: post.author.email,
       } as UserResponseDto,
       createdAt: post.createdAt,

@@ -39,6 +39,7 @@ export class UpdatePostHandler implements ICommandHandler<UpdatePostCommand> {
       author:
         ({
           id: post.author.id,
+          username: post.author.userName,
           email: post.author.email,
         } as UserResponseDto),
       createdAt: post.createdAt,

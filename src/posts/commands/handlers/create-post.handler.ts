@@ -28,7 +28,7 @@ export class CreatePostHandler implements ICommandHandler<CreatePostCommand> {
       content: post.content,
       author: {
         id: post.author.id,
-        username: post.author.username,
+        username: post.author.userName,
         email: post.author.email,
       } as UserResponseDto,
       createdAt: post.createdAt,

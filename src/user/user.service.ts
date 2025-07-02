@@ -8,21 +8,44 @@ import { InjectRepository } from '@nestjs/typeorm';
 @Injectable()
 export class UserService {
   constructor(@InjectRepository(User) private UserRepo: Repository<User>) {}
+
   async create(createUserDto: CreateUserDto) {
     try {
-      const user = this.UserRepo.create(createUserDto);
-      return await this.UserRepo.save(user);
-    } catch (error) {
-      // Handle duplicate email error
-      if (
-        error.code === '23505' &&
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        error.constraint === 'UQ_e12875dfb3b1d92d7d7c5377e22'
-      ) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      // Check if username already exists
+      const existingUser = await this.UserRepo.findOne({
+        where: { userName: createUserDto.userName },
+      });
+
+      if (existingUser) {
+        throw new ConflictException('Username already exists');
+      }
+
+      // Check if email already exists
+      const existingEmail = await this.UserRepo.findOne({
+        where: { email: createUserDto.email },
+      });
+
+      if (existingEmail) {
         throw new ConflictException('Email already exists');
       }
-      // Re-throw other errors
+
+      const user = this.UserRepo.create(createUserDto);
+      await this.UserRepo.save(user);
+
+      return {
+        success: true,
+        message: 'User created successfully',
+        email: user.email,
+      };
+    } catch (error) {
+      // Handle other potential database errors
+      if (error.code === '23505') {
+        // PostgreSQL unique violation code
+        if (error.constraint === 'UQ_da5934070b5f2726ebfd3122c80') {
+          throw new ConflictException('Username already exists');
+        }
+        throw new ConflictException('Duplicate key violation');
+      }
       throw error;
     }
   }
@@ -37,9 +60,9 @@ export class UserService {
 
   async findOne(id: number) {
     return await this.UserRepo.findOne({
-      where: {id},
-      select:['id', 'email'],
-      });
+      where: { id },
+      select: ['id', 'email'],
+    });
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { Post } from '../entities/post.entity';
 import { PostRepository } from './post.repository';
 import { CreatePostDto } from '../dto/create-post.dto';
@@ -30,24 +30,30 @@ export class PostTypeOrmRepository implements PostRepository {
   }
 
   async findAll(): Promise<Post[]> {
-    return this.postRepository.find({ 
-      relations: ['author', 'comments', 'likes'] 
+    return this.postRepository.find({
+      relations: ['author', 'comments', 'likes'],
     });
   }
 
   async findById(id: number): Promise<Post | null> {
     return this.postRepository.findOne({
       where: { id },
-      relations: ['author', 'comments', 'comments.author', 'likes', 'likes.user'],
+      relations: [
+        'author',
+        'comments',
+        'comments.author',
+        'likes',
+        'likes.user',
+      ],
     });
   }
 
   async findByIdWithAuthor(id: number): Promise<Post> {
     const post = await this.postRepository.findOne({
       where: { id },
-      relations: ['author']
+      relations: ['author'],
     });
-    
+
     if (!post) {
       throw new NotFoundException('Post not found');
     }
@@ -58,9 +64,9 @@ export class PostTypeOrmRepository implements PostRepository {
     await this.postRepository.update(id, updatePostDto);
     const updatedPost = await this.postRepository.findOne({
       where: { id },
-      relations: ['author', 'comments', 'likes']
+      relations: ['author', 'comments', 'likes'],
     });
-    
+
     if (!updatedPost) {
       throw new NotFoundException('Post not found after update');
     }
@@ -79,5 +85,33 @@ export class PostTypeOrmRepository implements PostRepository {
       where: { author: { id: authorId } },
       relations: ['author', 'comments', 'likes'],
     });
+  }
+
+  async findWithPagination(
+    skip: number,
+    limit: number,
+    search?: string,
+  ): Promise<Post[]> {
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('post.likes', 'likes')
+      .leftJoinAndSelect('post.comments', 'comments')
+      .orderBy('post.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    if (search) {
+      queryBuilder.where(
+        'post.title ILIKE :search OR post.content ILIKE :search',
+        { search: `%${search}%` },
+      );
+    }
+
+    return queryBuilder.getMany();
+  }
+
+  async countAll(): Promise<number> {
+    return this.postRepository.count();
   }
 }

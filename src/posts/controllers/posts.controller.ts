@@ -29,6 +29,7 @@ import {
 } from '@nestjs/swagger';
 import { PostResponseDto } from '../dto/post-response.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth/jwt-auth.guard';
+import { PaginatedResponseDto } from '../dto/paginated-response.dto';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -45,8 +46,14 @@ export class PostsController {
     type: [PostResponseDto],
   })
   @Get()
-  async findAll(): Promise<PostResponseDto[]> {
-    return this.queryBus.execute(new GetAllPostsQuery());
+  async findAll(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @Query('search') search?: string,
+  ): Promise<PaginatedResponseDto<PostResponseDto[]>> {
+    return this.queryBus.execute(
+      new GetAllPostsQuery(Number(page), Number(limit), search),
+    );
   }
 
   @ApiOperation({ summary: 'Get a specific post' })
@@ -98,7 +105,6 @@ export class PostsController {
     @Body() updatePostDto: UpdatePostDto,
     @Req() req,
   ): Promise<PostResponseDto> {
-   
     return this.commandBus.execute(
       new UpdatePostCommand(parseInt(id), updatePostDto, req.user.id),
     );
