@@ -33,13 +33,13 @@ export class PropertyController {
         return `This action returns a #${id} property with slug ${slug}`;
     }   
 
-      @Get(":id")
-      @HttpCode(200)
-      getByIdva(@Param("id", ParseIntPipe) id, @Query('sort', ParseBoolPipe) sort
-      ){
-       console.log(typeof sort);
-        return `This action returns a #${id} property`;
-        }
+    //   @Get(":id")
+    //   @HttpCode(200)
+    //   getByIdva(@Param("id", ParseIntPipe) id, @Query('sort', ParseBoolPipe) sort
+    //   ){
+    //    console.log(typeof sort);
+    //     return `This action returns a #${id} property`;
+    //     }
 
 
     @Patch(':id')
