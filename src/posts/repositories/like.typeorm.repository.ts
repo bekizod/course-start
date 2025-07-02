@@ -48,16 +48,51 @@ export class LikeTypeOrmRepository implements LikeRepository {
     });
   }
 
-  async isPostLikedByUser(userId: number, postId: number): Promise<boolean> {
-    const like = await this.likeRepository.findOne({
-      where: { user: { id: userId }, post: { id: postId } },
-    });
-    return !!like;
-  }
-
   async countLikesForPost(postId: number): Promise<number> {
     return this.likeRepository.count({
       where: { post: { id: postId } },
     });
+  }
+
+  async toggleLike(
+    userId: number,
+    postId: number,
+  ): Promise<{
+    like: Like | null;
+    action: 'liked' | 'unliked';
+  }> {
+    const existingLike = await this.likeRepository.findOne({
+      where: {
+        user: { id: userId },
+        post: { id: postId },
+      },
+      relations: ['user', 'post'],
+    });
+
+    if (existingLike) {
+      await this.likeRepository.remove(existingLike);
+      return { like: null, action: 'unliked' };
+    }
+
+    const user = await this.userRepository.findOneBy({ id: userId });
+    const post = await this.postRepository.findOneBy({ id: postId });
+
+    if (!user || !post) {
+      throw new Error('User or Post not found');
+    }
+
+    const newLike = this.likeRepository.create({ user, post });
+    const savedLike = await this.likeRepository.save(newLike);
+    return { like: savedLike, action: 'liked' };
+  }
+
+  async isPostLikedByUser(userId: number, postId: number): Promise<boolean> {
+    const count = await this.likeRepository.count({
+      where: {
+        user: { id: userId },
+        post: { id: postId },
+      },
+    });
+    return count > 0;
   }
 }

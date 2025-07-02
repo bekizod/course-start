@@ -59,6 +59,7 @@ const queryHandlers = [
   providers: [
     ...commandHandlers,
     ...queryHandlers,
+    CheckPostLikeHandler,
     {
       provide: POST_REPOSITORY,
       useClass: PostTypeOrmRepository,
