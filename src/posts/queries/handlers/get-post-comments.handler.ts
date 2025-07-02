@@ -1,26 +1,46 @@
+// src/posts/queries/handlers/get-post-comments.handler.ts
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { COMMENT_REPOSITORY, CommentRepository } from '../../repositories/comment.repository';
+import {
+  COMMENT_REPOSITORY,
+  CommentRepository,
+} from '../../repositories/comment.repository';
 import { GetPostCommentsQuery } from '../get-post-comments.query';
 import { CommentResponseDto } from '../../dto/comment-response.dto';
 import { UserResponseDto } from 'src/user/dto/user-response.dto';
-// import { POST_REPOSITORY } from 'src/posts/repositories/post.repository';
 import { Inject } from '@nestjs/common';
-
+import { PaginatedResponseDto } from 'src/posts/dto/paginated-response.dto';
 
 @QueryHandler(GetPostCommentsQuery)
-export class GetPostCommentsHandler implements IQueryHandler<GetPostCommentsQuery> {
+export class GetPostCommentsHandler
+  implements IQueryHandler<GetPostCommentsQuery>
+{
   constructor(
     @Inject(COMMENT_REPOSITORY)
-    private readonly commentRepository: CommentRepository) {}
+    private readonly commentRepository: CommentRepository,
+  ) {}
 
-  async execute(query: GetPostCommentsQuery): Promise<CommentResponseDto[]> {
-    const { postId } = query;
-    const comments = await this.commentRepository.findByPost(postId);
-    return comments.map(comment => this.mapToResponseDto(comment));
+  async execute(
+    query: GetPostCommentsQuery,
+  ): Promise<PaginatedResponseDto<CommentResponseDto[]>> {
+    const { postId, page, limit } = query;
+    const skip = (page - 1) * limit;
+
+    const [comments, totalCount] =
+      await this.commentRepository.findByPostWithPagination(
+        postId,
+        skip,
+        limit,
+      );
+
+    return this.formatResponse(
+      comments.map((comment) => this.mapToResponseDto(comment)),
+      totalCount,
+      page,
+      limit,
+    );
   }
 
   private mapToResponseDto(comment: any): CommentResponseDto {
-    console.log('Mapping comment to response DTO:', comment);
     return {
       id: comment.id,
       content: comment.content,
@@ -31,6 +51,25 @@ export class GetPostCommentsHandler implements IQueryHandler<GetPostCommentsQuer
       } as UserResponseDto,
       createdAt: comment.createdAt,
       updatedAt: comment.updatedAt,
+    };
+  }
+
+  private formatResponse(
+    data: CommentResponseDto[],
+    total: number,
+    page: number,
+    limit: number,
+  ): PaginatedResponseDto<CommentResponseDto[]> {
+    return {
+      status: 'success',
+      message: 'Comments retrieved successfully',
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 }

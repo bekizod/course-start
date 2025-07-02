@@ -10,6 +10,11 @@ export interface CommentRepository {
   findByPost(postId: number): Promise<Comment[]>;
   findById(id: number): Promise<Comment | null>;
   delete(id: number): Promise<void>;
+  findByPostWithPagination(
+    postId: number, 
+    skip: number, 
+    limit: number
+  ): Promise<[Comment[], number]>; // Returns comments and total count
 }
 
 export const COMMENT_REPOSITORY = 'COMMENT_REPOSITORY';

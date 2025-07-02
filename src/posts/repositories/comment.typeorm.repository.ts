@@ -7,7 +7,6 @@ import { CreateCommentDto } from '../dto/create-comment.dto';
 import { Post } from '../entities/post.entity';
 import { User } from 'src/entities/user.entity';
 
-
 @Injectable()
 export class CommentTypeOrmRepository implements CommentRepository {
   constructor(
@@ -20,14 +19,18 @@ export class CommentTypeOrmRepository implements CommentRepository {
   ) {}
 
   // Add this method to the existing implementation
-async findById(id: number): Promise<Comment | null> {
-  return this.commentRepository.findOne({
-    where: { id },
-    relations: ['author'],
-  });
-}
+  async findById(id: number): Promise<Comment | null> {
+    return this.commentRepository.findOne({
+      where: { id },
+      relations: ['author'],
+    });
+  }
 
-  async create(commentDto: CreateCommentDto, authorId: number, postId: number): Promise<Comment> {
+  async create(
+    commentDto: CreateCommentDto,
+    authorId: number,
+    postId: number,
+  ): Promise<Comment> {
     const author = await this.userRepository.findOneBy({ id: authorId });
     if (!author) {
       throw new Error('Author not found');
@@ -57,5 +60,19 @@ async findById(id: number): Promise<Comment | null> {
 
   async delete(id: number): Promise<void> {
     await this.commentRepository.delete(id);
+  }
+
+  async findByPostWithPagination(
+    postId: number,
+    skip: number,
+    limit: number,
+  ): Promise<[Comment[], number]> {
+    return this.commentRepository.findAndCount({
+      where: { post: { id: postId } },
+      relations: ['author'],
+      skip,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
   }
 }
