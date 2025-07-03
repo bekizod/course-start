@@ -14,7 +14,7 @@ async function bootstrap() {
     .setTitle('Blog Posts API')
     .setDescription('API for managing blog posts, comments, and likes')
     .setVersion('1.0')
-    .addBearerAuth() // For JWT auth
+    .addBearerAuth() // For JWT
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
