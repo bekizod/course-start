@@ -7,7 +7,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalFilters(new ValidationFilter());
   app.enableCors({
-    origin: ['localhost:3001'],
+    origin: ['localhost:3001','localhost:5173'],
     methods: 'GET,POST,PATCH,DELETE',
   });
   const config = new DocumentBuilder()
