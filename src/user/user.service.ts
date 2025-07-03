@@ -25,7 +25,7 @@ export class UserService {
   async findOne(id: number) {
     return await this.UserRepo.findOne({
       where: { id },
-      select: ['id', 'email'],
+      select: ['id', 'email', 'firstName', 'lastName', 'userName'],
     });
   }
 
