@@ -7,7 +7,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalFilters(new ValidationFilter());
   app.enableCors({
-    origin: ['http://localhost:3001', 'http://localhost:5173'],
+    origin: [
+      'http://localhost:3001',
+      'http://localhost:5173',
+      'https://blogsphere-v1.netlify.app',
+    ],
     methods: 'GET,POST,PATCH,DELETE',
   });
   const config = new DocumentBuilder()
