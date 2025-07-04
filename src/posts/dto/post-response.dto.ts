@@ -20,4 +20,6 @@ export class PostResponseDto {
   commentCount?: number; 
 
   isLiked?: boolean;
+
+  comments?: any[];
 }

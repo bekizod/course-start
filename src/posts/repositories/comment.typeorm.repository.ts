@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Comment } from '../entities/comment.entity';
 import { CommentRepository } from './comment.repository';
 import { CreateCommentDto } from '../dto/create-comment.dto';
@@ -60,6 +60,15 @@ export class CommentTypeOrmRepository implements CommentRepository {
 
   async delete(id: number): Promise<void> {
     await this.commentRepository.delete(id);
+  }
+
+  // In your CommentTypeOrmRepository implementation
+  async findByPostIds(postIds: number[]): Promise<Comment[]> {
+  return this.commentRepository.find({
+    where: { post: { id: In(postIds) } },
+    relations: ['author', 'post'],
+    order: { createdAt: 'DESC' },
+  });
   }
 
 

@@ -15,7 +15,8 @@ export interface CommentRepository {
     skip: number, 
     limit: number
   ): Promise<[Comment[], number]>; // Returns comments and total count
-  
+  // In your CommentRepository interface
+ findByPostIds(postIds: number[]): Promise<Comment[]>;
 }
 
 export const COMMENT_REPOSITORY = 'COMMENT_REPOSITORY';
