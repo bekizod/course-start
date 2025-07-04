@@ -15,6 +15,7 @@ export interface CommentRepository {
     skip: number, 
     limit: number
   ): Promise<[Comment[], number]>; // Returns comments and total count
+  
 }
 
 export const COMMENT_REPOSITORY = 'COMMENT_REPOSITORY';

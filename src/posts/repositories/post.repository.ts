@@ -20,6 +20,15 @@ export interface PostRepository {
     search: string,
   ): Promise<Post[]>;
   countAll(): Promise<number>;
+
+  findByAuthorWithPagination(
+    authorId: number,
+    skip: number,
+    limit: number,
+    search?: string,
+  ): Promise<Post[]>;
+
+  countByAuthor(authorId: number, search?: string): Promise<number>;
 }
 
 export const POST_REPOSITORY = 'POST_REPOSITORY';

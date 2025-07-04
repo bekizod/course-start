@@ -11,6 +11,9 @@ import {
   Req,
   Query,
   Patch,
+  BadRequestException,
+  ParseIntPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
@@ -30,6 +33,7 @@ import {
 import { PostResponseDto } from '../dto/post-response.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth/jwt-auth.guard';
 import { PaginatedResponseDto } from '../dto/paginated-response.dto';
+import { GetMyPostsQuery } from '../queries/get-my-posts.query';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -126,6 +130,53 @@ export class PostsController {
   async remove(@Param('id') id: string, @Req() req): Promise<void> {
     await this.commandBus.execute(
       new DeletePostCommand(parseInt(id), req.user.id),
+    );
+  }
+
+  @ApiOperation({ summary: 'Get my posts' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of my posts',
+    type: [PostResponseDto],
+  })
+  @ApiOperation({ summary: 'Get my posts with pagination' })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of my posts',
+    type: PaginatedResponseDto<PostResponseDto[]>,
+  })
+  @ApiOperation({ summary: 'Get my posts with pagination' })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of my posts',
+    type: PaginatedResponseDto<PostResponseDto[]>,
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async getMyPosts(
+    @Req() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+    @Query('search') search?: string,
+  ): Promise<PaginatedResponseDto<PostResponseDto[]>> {
+    // Ensure user ID exists and is valid
+    if (!req.user?.id || isNaN(Number(req.user.id))) {
+      throw new BadRequestException('Invalid user ID');
+    }
+
+    const userId = Number(req.user.id);
+
+    // Log the query parameters
+    console.log('Executing GetMyPostsQuery with:', {
+      userId,
+      page,
+      limit,
+      search,
+    });
+
+    return this.queryBus.execute(
+      new GetMyPostsQuery(userId, page, limit, search),
     );
   }
 }

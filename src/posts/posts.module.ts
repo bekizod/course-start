@@ -10,7 +10,7 @@ import { PostTypeOrmRepository } from './repositories/post.typeorm.repository';
 import { CommentTypeOrmRepository } from './repositories/comment.typeorm.repository';
 import { LikeTypeOrmRepository } from './repositories/like.typeorm.repository';
 
-//import { POST_REPOSITORY, PostRepository } from '../../repositories/post.repository'; 
+//import { POST_REPOSITORY, PostRepository } from '../../repositories/post.repository';
 // import { COMMENT_REPOSITORY } from './repositories/comment.repository';
 // import { LIKE_REPOSITORY } from './repositories/like.repository';
 
@@ -35,6 +35,7 @@ import { DeleteCommentHandler } from './commands/handlers/delete-comment.handler
 import { POST_REPOSITORY } from './repositories/post.repository';
 import { COMMENT_REPOSITORY } from './repositories/comment.repository';
 import { LIKE_REPOSITORY } from './repositories/like.repository';
+import { GetMyPostsHandler } from './queries/handlers/get-my-posts.handler';
 
 const commandHandlers = [
   CreatePostHandler,
@@ -60,6 +61,7 @@ const queryHandlers = [
     ...commandHandlers,
     ...queryHandlers,
     CheckPostLikeHandler,
+    GetMyPostsHandler,
     {
       provide: POST_REPOSITORY,
       useClass: PostTypeOrmRepository,

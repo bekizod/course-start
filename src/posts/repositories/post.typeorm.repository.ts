@@ -114,4 +114,54 @@ export class PostTypeOrmRepository implements PostRepository {
   async countAll(): Promise<number> {
     return this.postRepository.count();
   }
+
+  async findByAuthorWithPagination(
+    authorId: number,
+    skip: number,
+    limit: number,
+    search: string = '',
+  ): Promise<Post[]> {
+    console.log('Executing findByAuthorWithPagination with:', {
+      authorId,
+      skip,
+      limit,
+      search,
+    });
+
+    const query = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('post.comments', 'comments')
+      .leftJoinAndSelect('post.likes', 'likes')
+      .where('post.author.id = :authorId', { authorId });
+
+    if (search) {
+      query.andWhere('(post.title LIKE :search OR post.content LIKE :search)', {
+        search: `%${search}%`,
+      });
+    }
+
+    // Log the generated SQL query
+    console.log('SQL Query:', query.getQueryAndParameters());
+
+    return query
+      .orderBy('post.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getMany();
+  }
+
+  async countByAuthor(authorId: number, search: string = ''): Promise<number> {
+    const query = this.postRepository
+      .createQueryBuilder('post')
+      .where('post.author.id = :authorId', { authorId });
+
+    if (search) {
+      query.andWhere('(post.title LIKE :search OR post.content LIKE :search)', {
+        search: `%${search}%`,
+      });
+    }
+
+    return query.getCount();
+  }
 }

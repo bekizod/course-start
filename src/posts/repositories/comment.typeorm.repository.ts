@@ -62,6 +62,8 @@ export class CommentTypeOrmRepository implements CommentRepository {
     await this.commentRepository.delete(id);
   }
 
+
+  
   async findByPostWithPagination(
     postId: number,
     skip: number,
