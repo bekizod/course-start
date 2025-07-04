@@ -46,7 +46,7 @@ export class GetPostCommentsHandler
       content: comment.content,
       author: {
         id: comment.author.id,
-        username: comment.author.username,
+        username: comment.author.userName,
         email: comment.author.email,
       } as UserResponseDto,
       createdAt: comment.createdAt,
