@@ -50,13 +50,18 @@ export class PostsController {
     type: [PostResponseDto],
   })
   @Get()
+  @UseGuards(JwtAuthGuard) // Protect the endpoint
   async findAll(
+    @Req() req, // Get the request object to access user info
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
     @Query('search') search?: string,
   ): Promise<PaginatedResponseDto<PostResponseDto[]>> {
+    // Get the authenticated user's ID from the request
+    const userId = req.user?.id;
+
     return this.queryBus.execute(
-      new GetAllPostsQuery(Number(page), Number(limit), search),
+      new GetAllPostsQuery(Number(page), Number(limit), search, userId),
     );
   }
 
@@ -68,8 +73,10 @@ export class PostsController {
   })
   @ApiResponse({ status: 404, description: 'Post not found' })
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<PostResponseDto> {
-    return this.queryBus.execute(new GetPostQuery(parseInt(id)));
+  @UseGuards(JwtAuthGuard) // Optional: Remove if you want public access
+  async findOne(@Param('id') id: string, @Req() req): Promise<PostResponseDto> {
+    const userId = req.user?.id; // Get userId if authenticated
+    return this.queryBus.execute(new GetPostQuery(parseInt(id), userId));
   }
 
   @ApiOperation({ summary: 'Create a new post' })

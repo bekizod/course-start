@@ -12,6 +12,7 @@ import {
   COMMENT_REPOSITORY,
   CommentRepository,
 } from '../../repositories/comment.repository';
+import { LikeRepository, LIKE_REPOSITORY } from '../../repositories/like.repository';
 
 @QueryHandler(GetAllPostsQuery)
 export class GetAllPostsHandler implements IQueryHandler<GetAllPostsQuery> {
@@ -20,12 +21,14 @@ export class GetAllPostsHandler implements IQueryHandler<GetAllPostsQuery> {
     private readonly postRepository: PostRepository,
     @Inject(COMMENT_REPOSITORY)
     private readonly commentRepository: CommentRepository,
+    @Inject(LIKE_REPOSITORY)
+    private readonly likeRepository: LikeRepository,
   ) {}
 
   async execute(
     query: GetAllPostsQuery,
   ): Promise<PaginatedResponseDto<PostResponseDto[]>> {
-    const { page = 1, limit = 10, search = '' } = query;
+    const { page = 1, limit = 10, search = '', userId } = query;
     const skip = (page - 1) * limit;
 
     const [posts, totalCount] = await Promise.all([
@@ -36,9 +39,22 @@ export class GetAllPostsHandler implements IQueryHandler<GetAllPostsQuery> {
     // Fetch comments for all posts in a single query
     const postsWithComments = await this.enrichPostsWithComments(posts);
 
+    // Enrich posts with like information
+    const postsWithLikes = await Promise.all(
+      postsWithComments.map(async (post) => {
+        const isLikedByMe = userId
+          ? await this.likeRepository.isPostLikedByUser(userId, post.id)
+          : false;
+        return {
+          ...post,
+          isLikedByMe,
+        };
+      }),
+    );
+
     return this.formatResponse(
       {
-        data: postsWithComments.map((post) => this.mapToResponseDto(post)),
+        data: postsWithLikes.map((post) => this.mapToResponseDto(post)),
         pagination: {
           total: totalCount,
           page,
@@ -52,13 +68,9 @@ export class GetAllPostsHandler implements IQueryHandler<GetAllPostsQuery> {
   }
 
   private async enrichPostsWithComments(posts: any[]): Promise<any[]> {
-    // Get all post IDs
     const postIds = posts.map((post) => post.id);
-
-    // Fetch comments for all posts in a single query
     const allComments = await this.commentRepository.findByPostIds(postIds);
 
-    // Group comments by post ID
     const commentsByPostId = allComments.reduce((acc, comment) => {
       const postId = comment.post.id;
       if (!acc[postId]) {
@@ -68,7 +80,6 @@ export class GetAllPostsHandler implements IQueryHandler<GetAllPostsQuery> {
       return acc;
     }, {});
 
-    // Attach comments to each post
     return posts.map((post) => ({
       ...post,
       comments: commentsByPostId[post.id] || [],
@@ -89,6 +100,7 @@ export class GetAllPostsHandler implements IQueryHandler<GetAllPostsQuery> {
       updatedAt: post.updatedAt,
       likesCount: post.likes ? post.likes.length : 0,
       commentCount: post.comments ? post.comments.length : 0,
+      isLikedByMe: post.isLikedByMe, // Added isLikedByMe field
       comments: post.comments
         ? post.comments.slice(0, 3).map((comment) => ({
             id: comment.id,

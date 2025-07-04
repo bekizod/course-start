@@ -19,7 +19,7 @@ export class PostResponseDto {
   @IsNumber()
   commentCount?: number; 
 
-  isLiked?: boolean;
+  isLikedByMe?: boolean;
 
   comments?: any[];
 }
