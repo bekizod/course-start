@@ -6,9 +6,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { Post } from 'src/posts/entities/post.entity';
-import { Like } from 'src/posts/entities/like.entity';
-import { Comment } from 'src/posts/entities/comment.entity';
+import { Blog } from 'src/blog/entities/blog.entity';
 
 @Entity()
 export class User {
@@ -33,14 +31,8 @@ export class User {
   @Column({ nullable: true })
   createdAt: Date;
 
-  @OneToMany(() => Post, (post) => post.author)
-  posts: Post[];
-
-  @OneToMany(() => Comment, (comment) => comment.author)
-  comments: Comment[];
-
-  @OneToMany(() => Like, (like) => like.user)
-  likes: Like[];
+  @OneToMany(()=>Blog, (blog)=>blog.author)
+  blogs: Blog[]
 
   @BeforeInsert()
   async hashPassword() {

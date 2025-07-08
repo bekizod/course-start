@@ -7,7 +7,7 @@ import { pgConfig } from 'db.config';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
-import { PostsModule } from './posts/posts.module';
+import { BlogModule } from './blog/blog.module';
 
 
 @Module({
@@ -21,7 +21,7 @@ import { PostsModule } from './posts/posts.module';
     TypeOrmModule.forRoot(pgConfig),
     UserModule,
     AuthModule,
-    PostsModule
+    BlogModule,
   ],
   controllers: [AppController],
   providers: [AppService],
