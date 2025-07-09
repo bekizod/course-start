@@ -33,15 +33,15 @@ export class UserController {
 
 
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  //   return this.userService.update(+id, updateUserDto);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.userService.remove(+id);
+  // }
 }
 // function UseGuards(JwtAuthGuard: typeof JwtAuthGuard): (target: UserController, propertyKey: "getProfile", descriptor: TypedPropertyDescriptor<(req: any) => string>) => void | TypedPropertyDescriptor<(req: any) => string> {
 //   throw new Error('Function not implemented.');

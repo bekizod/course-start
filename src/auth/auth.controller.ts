@@ -18,6 +18,7 @@ import { LoginResponseDto } from './dto/login-response.dto';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { RefreshAuthGuard } from './guards/refresh-auth/refresh-auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth/jwt-auth.guard';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -58,12 +59,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard) // Keep the guard
   @Post('login')
   login(@Request() req) {
-    const token = this.authService.login(req.user.id);
-    return {
-      status: 'success',
-      message: 'Login successful',
-      data: this.authService.login(req.user.id)
-    };
+    return this.authService.login(req.user.id); 
   }
 
 
@@ -72,4 +68,11 @@ export class AuthController {
   refreshToken(@Req() req){
   return this.authService.refreshToken(req.user.id)
   }
-}
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  signOut(@Req() req){
+    this.authService.signOut(req.user.id)
+  }
+
+} 

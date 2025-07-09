@@ -9,6 +9,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import { AuthJwtPayload } from '../type/auth-jwtPayload';
 import refreshJwtConfig from '../config/refresh-jwt.config';
+import { Request } from 'express';
 
 @Injectable()
 export class RefreshJwtStrategy extends PassportStrategy(Strategy,'refresh-jwt') {
@@ -16,6 +17,7 @@ export class RefreshJwtStrategy extends PassportStrategy(Strategy,'refresh-jwt')
     @Inject(refreshJwtConfig.KEY)
     private refreshJwtConfiguration: ConfigType<typeof refreshJwtConfig>,
     private authService: AuthService,
+
   ) {
     if (!refreshJwtConfiguration.secret) {
       throw new Error('JWT secret is not defined');
@@ -24,10 +26,16 @@ export class RefreshJwtStrategy extends PassportStrategy(Strategy,'refresh-jwt')
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: refreshJwtConfiguration.secret,
       ignoreExpiration:false,
+      passReqToCallback:true
     });
   }
 
-  validate(payload: AuthJwtPayload) {
-   return {id: payload.sub};
+  validate(req:Request,payload: AuthJwtPayload) {
+  const authHeader = req.get('authorization');
+  if (!authHeader) throw new Error('Authorization header missing');
+  const refreshToken = authHeader.replace('Bearer', '').trim();
+  const userId = payload.sub
+   
+   return this.authService.validateRefreshToken(userId,refreshToken)
   }
 }

@@ -7,7 +7,7 @@ import { AuthJwtPayload } from './type/auth-jwtPayload';
 import refreshJwtConfig from './config/refresh-jwt.config';
 import { ConfigType } from '@nestjs/config';
 import { ResponseFormat } from 'src/common/utils/response.util';
-
+import * as argon2 from 'argon2'
 @Injectable()
 export class AuthService {
   constructor(
@@ -70,28 +70,70 @@ export class AuthService {
     return { id: user.id };
   }
 
-  login(userId: number) {
-    const payload : AuthJwtPayload = { sub: userId };
+  async login(userId: number) {
+    const {accessToken,refreshToken} = await this.generateTokens(userId)
+    const hashedRefreshToken = await argon2.hash(refreshToken)
+    await this.userService.updateHasedRefreshToken(userId,hashedRefreshToken)
 
-    const token = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload,this.refreshTokenConfig)
-    return({
-      id:userId,
-      token,
-      refreshToken
-    })
-  }
-
-  refreshToken(userId:number){
-
-    const payload: AuthJwtPayload = {sub : userId};
-    const token = this.jwtService.sign(payload)
-
-    return ResponseFormat.success('refresh Token retrieved successfully', {
+    return ResponseFormat.success('Login successfully', {
     data: {
       id:userId,
-      token
+      accessToken,
+      refreshToken
+  }
+  })
+  }
+
+  async generateTokens(userId:number){
+    const payload: AuthJwtPayload = {sub: userId}
+    const [accessToken, refreshToken] = await Promise.all(
+      [this.jwtService.signAsync(payload),
+      this.jwtService.signAsync(payload, this.refreshTokenConfig)]
+    )
+
+    return {
+      accessToken,
+      refreshToken
     }
+  }
+
+  async refreshToken(userId:number){
+
+   const {accessToken,refreshToken} = await this.generateTokens(userId)
+    const hashedRefreshToken = await argon2.hash(refreshToken)
+    await this.userService.updateHasedRefreshToken(userId,hashedRefreshToken)
+    return ResponseFormat.success('Login with refresh token successfully', {
+    data: {
+      id:userId,
+      accessToken,
+      refreshToken
+  }
   });
+
 }
+
+async validateRefreshToken(userId: number, refreshToken: string) {
+  const userResult = await this.userService.findOne(userId);
+  const user = userResult?.data;
+  if (!user || !user.hashedRefreshToken) {
+    throw new UnauthorizedException('Invalid refresh token');
+  }
+
+  const isRefreshTokenValid = await argon2.verify(user.hashedRefreshToken, refreshToken);
+  if (!isRefreshTokenValid) {
+    throw new UnauthorizedException('Invalid refresh token');
+  }
+
+  const refreshTokenMatches = await argon2.verify(user.hashedRefreshToken,refreshToken)
+
+  if(!refreshTokenMatches) throw new UnauthorizedException('Invalid refresh token')
+
+    return {id : userId}
+}
+
+
+async signOut(userId){
+  await this.userService.updateHasedRefreshToken(userId,null)
+  return ResponseFormat.success('Login Out successfully')
+  }
 }

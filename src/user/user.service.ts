@@ -10,6 +10,9 @@ import { ResponseFormat } from 'src/common/utils/response.util';
 export class UserService {
   constructor(@InjectRepository(User) private UserRepo: Repository<User>) {}
 
+  async updateHasedRefreshToken(userId:number,hashedRefreshToken:any){
+    return await this.UserRepo.update({id:userId},{hashedRefreshToken})
+  }
   async create(createUserDto: CreateUserDto) {
     const user = this.UserRepo.create(createUserDto);
     return this.UserRepo.save(user);
@@ -26,7 +29,7 @@ export class UserService {
   async findOne(id: number) {
     const profileInfo =  await this.UserRepo.findOne({
       where: { id },
-      select: ['id', 'email', 'firstName', 'lastName', 'userName'],
+      select: ['id', 'email', 'firstName', 'lastName', 'userName','hashedRefreshToken'],
     });
 
 
@@ -35,11 +38,11 @@ export class UserService {
   });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
+  // update(id: number, updateUserDto: UpdateUserDto) {
+  //   return `This action updates a #${id} user`;
+  // }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
-  }
+  // remove(id: number) {
+  //   return `This action removes a #${id} user`;
+  // }
 }
