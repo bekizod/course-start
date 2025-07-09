@@ -12,6 +12,8 @@ import jwtConfig from './config/jwt.config';
 import { ConfigModule } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { APP_PIPE } from '@nestjs/core';
+import refreshJwtConfig from './config/refresh-jwt.config';
+import { RefreshJwtStrategy } from './strategies/refresh-strategy';
 // import jwtConfig from './config/jwt.config';
 // import { ConfigModule } from '@nestjs/config';
 // import { JwtStrategy } from './strategies/jwt.strategy';
@@ -24,6 +26,7 @@ import { APP_PIPE } from '@nestjs/core';
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
     JwtModule.registerAsync(jwtConfig.asProvider()),
      ConfigModule.forFeature(jwtConfig),
+     ConfigModule.forFeature(refreshJwtConfig),
   ],
   controllers: [AuthController],
   providers: [
@@ -42,6 +45,7 @@ import { APP_PIPE } from '@nestjs/core';
     UserService,
     LocalStrategy,
     JwtStrategy,
+    RefreshJwtStrategy
 
 
 

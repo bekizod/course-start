@@ -4,6 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ResponseFormat } from 'src/common/utils/response.util';
 
 @Injectable()
 export class UserService {
@@ -23,10 +24,15 @@ export class UserService {
   }
 
   async findOne(id: number) {
-    return await this.UserRepo.findOne({
+    const profileInfo =  await this.UserRepo.findOne({
       where: { id },
       select: ['id', 'email', 'firstName', 'lastName', 'userName'],
     });
+
+
+    return ResponseFormat.success('Profile retrieved successfully', {
+    data: profileInfo
+  });
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {

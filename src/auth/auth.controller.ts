@@ -9,6 +9,7 @@ import {
   HttpStatus,
   UseGuards,
   Request,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth/local-auth.guard';
@@ -16,6 +17,7 @@ import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { RefreshAuthGuard } from './guards/refresh-auth/refresh-auth.guard';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -55,15 +57,19 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard) // Keep the guard
   @Post('login')
-  login(@Request() req): LoginResponseDto {
+  login(@Request() req) {
     const token = this.authService.login(req.user.id);
     return {
       status: 'success',
       message: 'Login successful',
-      data: {
-        id: req.user.id,
-        accessToken: token,
-      },
+      data: this.authService.login(req.user.id)
     };
+  }
+
+
+  @UseGuards(RefreshAuthGuard)
+  @Post('refresh')
+  refreshToken(@Req() req){
+  return this.authService.refreshToken(req.user.id)
   }
 }

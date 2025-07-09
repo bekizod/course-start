@@ -7,6 +7,8 @@ import {
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Blog } from 'src/blog/entities/blog.entity';
+import { Comment } from 'src/comment/entities/comment.entity';
+
 
 @Entity()
 export class User {
@@ -38,6 +40,9 @@ export class User {
   async hashPassword() {
     this.password = await bcrypt.hash(this.password, 10);
   }
+
+  @OneToMany(() => Comment, (comment) => comment.user)
+  comments: Comment[];
 
   @BeforeInsert()
   setCreatedAt() {

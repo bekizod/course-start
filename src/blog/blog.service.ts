@@ -32,52 +32,53 @@ export class BlogService {
   }
 
   async findAll(
-    queryParams: BlogQueryParamsDto
-  ): Promise<ResponseFormat<BlogResponse[]>> {
-    const {
-      page = 1,
-      limit = 10,
-      search,
-      sortBy = 'createdAt',
-      sortOrder = 'DESC',
-      authorId
-    } = queryParams;
+  queryParams: BlogQueryParamsDto
+): Promise<ResponseFormat<BlogResponse[]>> {
+  const {
+    page = 1,
+    limit = 10,
+    search,
+    sortBy = 'createdAt',
+    sortOrder = 'DESC',
+    authorId
+  } = queryParams;
 
-    const queryBuilder = this.blogRepository
-      .createQueryBuilder('blog')
-      .leftJoinAndSelect('blog.author', 'author')
-      .take(limit)
-      .skip((page - 1) * limit)
-      .orderBy(`blog.${sortBy}`, sortOrder);
+  const queryBuilder = this.blogRepository
+    .createQueryBuilder('blog')
+    .leftJoinAndSelect('blog.author', 'author')
+    .leftJoin('blog.comments', 'comments')
+    .loadRelationCountAndMap('blog.totalComments', 'blog.comments')
+    .take(limit)
+    .skip((page - 1) * limit)
+    .orderBy(`blog.${sortBy}`, sortOrder);
 
-    if (authorId) {
-      queryBuilder.andWhere('author.id = :authorId', { authorId });
-    }
+  if (authorId) {
+    queryBuilder.andWhere('author.id = :authorId', { authorId });
+  }
 
-    if (search) {
-      queryBuilder.andWhere(
-        '(blog.title LIKE :search OR author.userName LIKE :search)',
-        { search: `%${search}%` }
-      );
-    }
-
-    const [blogs, total] = await queryBuilder.getManyAndCount();
-    const blogsResponse = plainToInstance(BlogResponse, blogs, {
-      excludeExtraneousValues: true
-    });
-
-    return ResponseFormat.paginated(
-      'Blogs retrieved successfully',
-      blogsResponse,
-      {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
+  if (search) {
+    queryBuilder.andWhere(
+      '(blog.title LIKE :search OR author.userName LIKE :search)',
+      { search: `%${search}%` }
     );
   }
 
+  const [blogs, total] = await queryBuilder.getManyAndCount();
+  const blogsResponse = plainToInstance(BlogResponse, blogs, {
+    excludeExtraneousValues: true
+  });
+
+  return ResponseFormat.paginated(
+    'Blogs retrieved successfully',
+    blogsResponse,
+    {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit)
+    }
+  );
+}
   async findOne(id: number): Promise<ResponseFormat<BlogResponse>> {
     const blog = await this.blogRepository.findOne({
       where: { id },
