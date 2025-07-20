@@ -81,6 +81,12 @@ async verifyEmail(@Query('token') token: string, @Res() res: Response) {
     return this.userService.findOne(req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('/update-password')
+  updatePassword(@Body() body, @Req() req){
+    return this.userService.resetPassword(body, req.user)
+  }
+
 
 
   // @Patch(':id')

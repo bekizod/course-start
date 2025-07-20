@@ -1,5 +1,5 @@
 // src/user/user.service.ts
-import { ConflictException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ResponseFormat } from 'src/common/utils/response.util';
 import * as nodemailer from 'nodemailer';
 import { v4 as uuidv4 } from 'uuid';
-import { hash } from 'bcrypt';
+import { compare, hash } from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -196,6 +196,57 @@ this.transporter = nodemailer.createTransport({
     data: profileInfo
   });
   }
+
+  async resetPassword(body: {oldPassword: string, newPassword: string}, user: {id: number}): Promise<any> {
+    const {oldPassword, newPassword} = body;
+    const {id} = user;
+    const USER = await this.UserRepo.findOne({
+      where:{id}
+    })
+  
+    
+
+    // Optional: Check if new password is different
+    if (oldPassword === newPassword) {
+        throw new BadRequestException({
+            status: 'error',
+            message: 'New password must be different from old password',
+        });
+    }
+
+     if (!oldPassword || !newPassword) {
+        throw new BadRequestException({
+            status: 'error',
+            message: 'Both oldPassword and newPassword are required',
+        });
+    }
+
+    if (!USER?.password) {  // Check if user's password exists in DB
+        throw new UnauthorizedException({
+            status: 'error',
+            message: 'User password not found',
+        });
+    }
+    const isOldPassword = await compare(oldPassword, USER.password);
+    if(!isOldPassword) {
+        throw new UnauthorizedException({
+            status: 'error',
+            message: 'Incorrect Old Password',
+        });
+    }
+    
+    try {
+        const hashedPassword = await hash(newPassword, 10);
+        await this.UserRepo.update({id}, {password: hashedPassword});
+        
+        return ResponseFormat.success('Password Updated Successfully');
+    } catch (error) {
+        throw new InternalServerErrorException({
+            status: 'error',
+            message: 'Failed to update password',
+        });
+    }
+}
 }
 
 

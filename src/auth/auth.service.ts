@@ -179,7 +179,8 @@ async sendPasswordResetOtp(email: string) {
       throw new UnauthorizedException('OTP has expired');
     }
 
-    
+    // Update password
+
     await this.userService.updatePassword(email, newPassword);
 
     // Clear OTP
