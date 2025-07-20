@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ResponseFormat } from 'src/common/utils/response.util';
 import * as nodemailer from 'nodemailer';
 import { v4 as uuidv4 } from 'uuid';
+import { hash } from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -151,6 +152,12 @@ this.transporter = nodemailer.createTransport({
       { data: { id: savedUser.id } }
     );
   }
+
+  async updatePassword(email: string, updatePassword: string) {
+  // Hash the new password before storing
+  const hashedPassword = await hash(updatePassword, 10); 
+  await this.UserRepo.update({ email }, { password: hashedPassword });
+}
 
   async verifyEmail(token: string): Promise<boolean> {
     const user = await this.UserRepo.findOne({ 

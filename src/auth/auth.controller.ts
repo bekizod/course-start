@@ -75,4 +75,28 @@ export class AuthController {
     this.authService.signOut(req.user.id)
   }
 
+
+  @Post('forgot-password')
+@ApiOperation({ summary: 'Request password reset OTP' })
+@ApiResponse({
+  status: HttpStatus.OK,
+  description: 'OTP sent successfully',
+})
+async forgotPassword(@Body('email') email: string) {
+  return this.authService.sendPasswordResetOtp(email);
+}
+
+@Post('reset-password')
+@ApiOperation({ summary: 'Reset password with OTP' })
+@ApiResponse({
+  status: HttpStatus.OK,
+  description: 'Password reset successful',
+})
+async resetPassword(
+  @Body('email') email: string,
+  @Body('otp') otp: string,
+  @Body('newPassword') newPassword: string,
+) {
+  return this.authService.resetPasswordWithOtp(email, otp, newPassword);
+}
 } 
