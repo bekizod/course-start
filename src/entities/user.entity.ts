@@ -37,6 +37,13 @@ export class User {
   @Column({ nullable: true })
   createdAt: Date;
 
+
+  @Column({ default: false })
+  isVerified: boolean;
+
+  @Column({ type: 'varchar', nullable: true }) // Explicitly set type and nullable
+  verificationToken: string | null;
+
   @OneToMany(()=>Blog, (blog)=>blog.author)
   blogs: Blog[]
 

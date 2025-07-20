@@ -11,6 +11,9 @@ export class ResponseFormat<T> {
     totalPages: number;
   };
   timestamp: string;
+  id: any;
+  email: any;
+  userName: any;
 
   constructor(
     status: 'success' | 'error',
