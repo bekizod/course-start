@@ -1,4 +1,9 @@
-import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcrypt';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
@@ -7,19 +12,20 @@ import { AuthJwtPayload } from './type/auth-jwtPayload';
 import refreshJwtConfig from './config/refresh-jwt.config';
 import { ConfigType } from '@nestjs/config';
 import { ResponseFormat } from 'src/common/utils/response.util';
-import * as argon2 from 'argon2'
-import * as nodemailer from 'nodemailer';  
+import * as argon2 from 'argon2';
+import * as nodemailer from 'nodemailer';
+import { currentUsers } from './type/current-user';
 @Injectable()
 export class AuthService {
   private transporter: nodemailer.Transporter;
-  private otpStorage: Map<string, { otp: string; expiresAt: number }> = new Map();
-
+  private otpStorage: Map<string, { otp: string; expiresAt: number }> =
+    new Map();
 
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-    @Inject(refreshJwtConfig.KEY) 
-    private refreshTokenConfig:ConfigType<typeof refreshJwtConfig>
+    @Inject(refreshJwtConfig.KEY)
+    private refreshTokenConfig: ConfigType<typeof refreshJwtConfig>,
   ) {
     // Initialize nodemailer transporter
     this.transporter = nodemailer.createTransport({
@@ -34,13 +40,17 @@ export class AuthService {
   async register(createUserDto: CreateUserDto) {
     try {
       // Check if username exists
-      const existingUser = await this.userService.findByEmail(createUserDto.userName);
+      const existingUser = await this.userService.findByEmail(
+        createUserDto.userName,
+      );
       if (existingUser) {
         throw new ConflictException('Username already exists');
       }
 
       // Check if email exists
-      const existingEmail = await this.userService.findByEmail(createUserDto.email);
+      const existingEmail = await this.userService.findByEmail(
+        createUserDto.email,
+      );
       if (existingEmail) {
         throw new ConflictException('Email already exists');
       }
@@ -58,13 +68,14 @@ export class AuthService {
         },
       };
     } catch (error) {
-      if (error.code === '23505') { // PostgreSQL unique violation
+      if (error.code === '23505') {
+        // PostgreSQL unique violation
         throw new ConflictException('Duplicate key violation');
       }
       throw error;
     }
   }
-  
+
   async validateUser(email: string, password: string): Promise<{ id: number }> {
     const user = await this.userService.findByEmail(email);
     if (!user) {
@@ -86,71 +97,78 @@ export class AuthService {
   }
 
   async login(userId: number) {
-    const {accessToken,refreshToken} = await this.generateTokens(userId)
-    const hashedRefreshToken = await argon2.hash(refreshToken)
-    await this.userService.updateHasedRefreshToken(userId,hashedRefreshToken)
+    const { accessToken, refreshToken } = await this.generateTokens(userId);
+    const hashedRefreshToken = await argon2.hash(refreshToken);
+    await this.userService.updateHasedRefreshToken(userId, hashedRefreshToken);
 
     return ResponseFormat.success('Login successfully', {
-    data: {
-      id:userId,
-      accessToken,
-      refreshToken
-  }
-  })
+      data: {
+        id: userId,
+        accessToken,
+        refreshToken,
+      },
+    });
   }
 
-  async generateTokens(userId:number){
-    const payload: AuthJwtPayload = {sub: userId}
-    const [accessToken, refreshToken] = await Promise.all(
-      [this.jwtService.signAsync(payload),
-      this.jwtService.signAsync(payload, this.refreshTokenConfig)]
-    )
+  async generateTokens(userId: number) {
+    const payload: AuthJwtPayload = { sub: userId };
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload),
+      this.jwtService.signAsync(payload, this.refreshTokenConfig),
+    ]);
 
     return {
       accessToken,
-      refreshToken
-    }
+      refreshToken,
+    };
   }
 
-  async refreshToken(userId:number){
-
-   const {accessToken,refreshToken} = await this.generateTokens(userId)
-    const hashedRefreshToken = await argon2.hash(refreshToken)
-    await this.userService.updateHasedRefreshToken(userId,hashedRefreshToken)
+  async refreshToken(userId: number) {
+    const { accessToken, refreshToken } = await this.generateTokens(userId);
+    const hashedRefreshToken = await argon2.hash(refreshToken);
+    await this.userService.updateHasedRefreshToken(userId, hashedRefreshToken);
     return ResponseFormat.success('Login with refresh token successfully', {
-    data: {
-      id:userId,
-      accessToken,
-      refreshToken
-  }
-  });
-
-}
-
-async validateRefreshToken(userId: number, refreshToken: string) {
-  const userResult = await this.userService.findOne(userId);
-  const user = userResult?.data;
-  if (!user || !user.hashedRefreshToken) {
-    throw new UnauthorizedException('Invalid refresh token');
+      data: {
+        id: userId,
+        accessToken,
+        refreshToken,
+      },
+    });
   }
 
-  const isRefreshTokenValid = await argon2.verify(user.hashedRefreshToken, refreshToken);
-  if (!isRefreshTokenValid) {
-    throw new UnauthorizedException('Invalid refresh token');
+  async validateRefreshToken(userId: number, refreshToken: string) {
+    const userResult = await this.userService.findOne(userId);
+    const user = userResult?.data;
+    if (!user || !user.hashedRefreshToken) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const isRefreshTokenValid = await argon2.verify(
+      user.hashedRefreshToken,
+      refreshToken,
+    );
+    if (!isRefreshTokenValid) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const refreshTokenMatches = await argon2.verify(
+      user.hashedRefreshToken,
+      refreshToken,
+    );
+
+    if (!refreshTokenMatches)
+      throw new UnauthorizedException('Invalid refresh token');
+
+    return { id: userId };
   }
 
-  const refreshTokenMatches = await argon2.verify(user.hashedRefreshToken,refreshToken)
-
-  if(!refreshTokenMatches) throw new UnauthorizedException('Invalid refresh token')
-
-    return {id : userId}
-}
-
-async sendPasswordResetOtp(email: string) {
+  async sendPasswordResetOtp(email: string) {
     const user = await this.userService.findByEmail(email);
     if (!user) {
       // Don't reveal whether email exists for security
-      return ResponseFormat.success('If the email exists, an OTP has been sent');
+      return ResponseFormat.success(
+        'If the email exists, an OTP has been sent',
+      );
     }
 
     // Generate 6-digit OTP
@@ -241,9 +259,22 @@ async sendPasswordResetOtp(email: string) {
       throw new Error('Failed to send OTP email');
     }
   }
-  
-async signOut(userId){
-  await this.userService.updateHasedRefreshToken(userId,null)
-  return ResponseFormat.success('Login Out successfully')
+
+  async validateJwtuser(id: number) {
+    const userResponse = await this.userService.findOne(id);
+    const user = userResponse.data; // Assuming ResponseFormat has a 'data' property
+
+    if (!user) throw new UnauthorizedException('User not Found!!!');
+
+    const currentUser: currentUsers = {
+      id: user.id,
+      role: user.role,
+    };
+
+    return currentUser;
+  }
+  async signOut(userId) {
+    await this.userService.updateHasedRefreshToken(userId, null);
+    return ResponseFormat.success('Login Out successfully');
   }
 }

@@ -22,11 +22,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: jwtConfiguration.secret,
-      ignoreExpiration:false,
+      ignoreExpiration: false,
     });
   }
 
   validate(payload: AuthJwtPayload) {
-   return {id: payload.sub};
+    const userId = payload.sub;
+    return this.authService.validateJwtuser(userId);
   }
 }

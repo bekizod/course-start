@@ -8,7 +8,7 @@ import {
 import * as bcrypt from 'bcrypt';
 import { Blog } from 'src/blog/entities/blog.entity';
 import { Comment } from 'src/comment/entities/comment.entity';
-
+import { Role } from 'src/auth/enums/role.enum';
 
 @Entity()
 export class User {
@@ -30,13 +30,18 @@ export class User {
   @Column()
   password: string;
 
-  @Column({nullable:true})
-  hashedRefreshToken:string
+  @Column({
+    type: 'enum',
+    enum: Role,
+    default: Role.USER, // Default role can be set to USER or any other role as needed
+  })
+  role: Role;
 
-  
+  @Column({ nullable: true })
+  hashedRefreshToken: string;
+
   @Column({ nullable: true })
   createdAt: Date;
-
 
   @Column({ default: false })
   isVerified: boolean;
@@ -44,8 +49,8 @@ export class User {
   @Column({ type: 'varchar', nullable: true }) // Explicitly set type and nullable
   verificationToken: string | null;
 
-  @OneToMany(()=>Blog, (blog)=>blog.author)
-  blogs: Blog[]
+  @OneToMany(() => Blog, (blog) => blog.author)
+  blogs: Blog[];
 
   @BeforeInsert()
   async hashPassword() {

@@ -8,8 +8,8 @@ import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConne
 export const pgConfig: PostgresConnectionOptions = {
   type: 'postgres',
   host: 'localhost',
-  url: 'postgresql://neondb_owner:npg_LfaD9GnMCW1J@ep-aged-bread-a81ffhnv-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require',
-  entities: [User, Blog,Comment],
+  url: 'postgresql://neondb_owner:npg_k2xZvyURp3JX@ep-fragrant-leaf-adt4zu2l-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+  entities: [User, Blog, Comment],
   port: 3306,
   synchronize: true, // ⚠️ Only for dev (drops tables in production!)
 };

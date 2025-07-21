@@ -1,5 +1,11 @@
 // src/user/user.service.ts
-import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
@@ -15,26 +21,25 @@ export class UserService {
   private transporter: nodemailer.Transporter;
 
   constructor(
-    @InjectRepository(User) 
+    @InjectRepository(User)
     private UserRepo: Repository<User>,
   ) {
     // Initialize nodemailer transporter
     // In your UserService constructor
-this.transporter = nodemailer.createTransport({
-  service: 'gmail',
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+    this.transporter = nodemailer.createTransport({
+      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
   }
 
-
-  async updateHasedRefreshToken(userId:number,hashedRefreshToken:any){
-    return await this.UserRepo.update({id:userId},{hashedRefreshToken})
+  async updateHasedRefreshToken(userId: number, hashedRefreshToken: any) {
+    return await this.UserRepo.update({ id: userId }, { hashedRefreshToken });
   }
 
   async sendVerificationEmail(email: string, token: string): Promise<void> {
@@ -44,7 +49,7 @@ this.transporter = nodemailer.createTransport({
       from: process.env.EMAIL_FROM,
       to: email,
       subject: 'Verify Your Email',
-     html: `
+      html: `
 <!DOCTYPE html>
 <html>
 <head>
@@ -123,7 +128,7 @@ this.transporter = nodemailer.createTransport({
     </div>
 </body>
 </html>
-`
+`,
     });
   }
 
@@ -143,34 +148,34 @@ this.transporter = nodemailer.createTransport({
     });
 
     const savedUser = await this.UserRepo.save(user);
-    
+
     // Send verification email
     await this.sendVerificationEmail(savedUser.email, verificationToken);
-    
+
     return ResponseFormat.success(
       'Registration successful. Please check your email to verify your account.',
-      { data: { id: savedUser.id } }
+      { data: { id: savedUser.id } },
     );
   }
 
   async updatePassword(email: string, updatePassword: string) {
-  // Hash the new password before storing
-  const hashedPassword = await hash(updatePassword, 10); 
-  await this.UserRepo.update({ email }, { password: hashedPassword });
-}
+    // Hash the new password before storing
+    const hashedPassword = await hash(updatePassword, 10);
+    await this.UserRepo.update({ email }, { password: hashedPassword });
+  }
 
   async verifyEmail(token: string): Promise<boolean> {
-    const user = await this.UserRepo.findOne({ 
-      where: { verificationToken: token } 
+    const user = await this.UserRepo.findOne({
+      where: { verificationToken: token },
     });
-    
+
     if (!user) {
       return false;
     }
 
     await this.UserRepo.update(
       { id: user.id },
-      { 
+      {
         isVerified: true,
         verificationToken: null,
       },
@@ -186,68 +191,79 @@ this.transporter = nodemailer.createTransport({
     return user ?? undefined;
   }
   async findOne(id: number) {
-    const profileInfo =  await this.UserRepo.findOne({
+    const profileInfo = await this.UserRepo.findOne({
       where: { id },
-      select: ['id', 'email', 'firstName', 'lastName', 'userName','hashedRefreshToken'],
+      select: [
+        'id',
+        'email',
+        'firstName',
+        'lastName',
+        'userName',
+        'hashedRefreshToken',
+        'role',
+      ],
     });
 
-
     return ResponseFormat.success('Profile retrieved successfully', {
-    data: profileInfo
-  });
+      data: profileInfo,
+    });
   }
 
-  async resetPassword(body: {oldPassword: string, newPassword: string}, user: {id: number}): Promise<any> {
-    const {oldPassword, newPassword} = body;
-    const {id} = user;
+  async resetPassword(
+    body: { oldPassword: string; newPassword: string },
+    user: { id: number },
+  ): Promise<any> {
+    const { oldPassword, newPassword } = body;
+    const { id } = user;
     const USER = await this.UserRepo.findOne({
-      where:{id}
-    })
-  
-    
+      where: { id },
+    });
 
     // Optional: Check if new password is different
     if (oldPassword === newPassword) {
-        throw new BadRequestException({
-            status: 'error',
-            message: 'New password must be different from old password',
-        });
+      throw new BadRequestException({
+        status: 'error',
+        message: 'New password must be different from old password',
+      });
     }
 
-     if (!oldPassword || !newPassword) {
-        throw new BadRequestException({
-            status: 'error',
-            message: 'Both oldPassword and newPassword are required',
-        });
+    if (!oldPassword || !newPassword) {
+      throw new BadRequestException({
+        status: 'error',
+        message: 'Both oldPassword and newPassword are required',
+      });
     }
 
-    if (!USER?.password) {  // Check if user's password exists in DB
-        throw new UnauthorizedException({
-            status: 'error',
-            message: 'User password not found',
-        });
+    if (!USER?.password) {
+      // Check if user's password exists in DB
+      throw new UnauthorizedException({
+        status: 'error',
+        message: 'User password not found',
+      });
     }
     const isOldPassword = await compare(oldPassword, USER.password);
-    if(!isOldPassword) {
-        throw new UnauthorizedException({
-            status: 'error',
-            message: 'Incorrect Old Password',
-        });
+    if (!isOldPassword) {
+      throw new UnauthorizedException({
+        status: 'error',
+        message: 'Incorrect Old Password',
+      });
     }
-    
+
     try {
-        const hashedPassword = await hash(newPassword, 10);
-        await this.UserRepo.update({id}, {password: hashedPassword});
-        
-        return ResponseFormat.success('Password Updated Successfully');
+      const hashedPassword = await hash(newPassword, 10);
+      await this.UserRepo.update({ id }, { password: hashedPassword });
+
+      return ResponseFormat.success('Password Updated Successfully');
     } catch (error) {
-        throw new InternalServerErrorException({
-            status: 'error',
-            message: 'Failed to update password',
-        });
+      throw new InternalServerErrorException({
+        status: 'error',
+        message: 'Failed to update password',
+      });
     }
+  }
+  async remove(id: number) {
+    // await this.UserRepo.delete({ id });
+
+    return ResponseFormat.success(`user id = ${id} Deleted Successfully`);
+  }
 }
-}
-
-
-

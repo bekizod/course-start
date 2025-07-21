@@ -13,27 +13,31 @@ import {
   Redirect,
   Query,
   Res,
+  SetMetadata,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth/jwt-auth.guard';
-import { Response } from 'express'; 
+import { Response } from 'express';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Role } from 'src/auth/enums/role.enum';
+import { RolesGuard } from 'src/auth/guards/roles/roles.guard';
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post("/register")
+  @Post('/register')
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
 
   @Get('verify-email')
-async verifyEmail(@Query('token') token: string, @Res() res: Response) {
-  const isVerified = await this.userService.verifyEmail(token);
-  
-  if (!isVerified) {
-    const errorHtml = `
+  async verifyEmail(@Query('token') token: string, @Res() res: Response) {
+    const isVerified = await this.userService.verifyEmail(token);
+
+    if (!isVerified) {
+      const errorHtml = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -51,10 +55,10 @@ async verifyEmail(@Query('token') token: string, @Res() res: Response) {
       </body>
       </html>
     `;
-    return res.status(400).send(errorHtml);
-  }
+      return res.status(400).send(errorHtml);
+    }
 
-  const successHtml = `
+    const successHtml = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -72,8 +76,8 @@ async verifyEmail(@Query('token') token: string, @Res() res: Response) {
     </body>
     </html>
   `;
-  return res.status(200).send(successHtml);
-}
+    return res.status(200).send(successHtml);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
@@ -83,21 +87,23 @@ async verifyEmail(@Query('token') token: string, @Res() res: Response) {
 
   @UseGuards(JwtAuthGuard)
   @Post('/update-password')
-  updatePassword(@Body() body, @Req() req){
-    return this.userService.resetPassword(body, req.user)
+  updatePassword(@Body() body, @Req() req) {
+    return this.userService.resetPassword(body, req.user);
   }
-
-
 
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
   //   return this.userService.update(+id, updateUserDto);
   // }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.userService.remove(+id);
-  // }
+  // @SetMetadata('role', 'ADMIN')
+  @Roles(Role.ADMIN)
+  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard)
+  @Delete('/deleteUser/:id')
+  remove(@Param('id') id: string) {
+    return this.userService.remove(+id);
+  }
 }
 // function UseGuards(JwtAuthGuard: typeof JwtAuthGuard): (target: UserController, propertyKey: "getProfile", descriptor: TypedPropertyDescriptor<(req: any) => string>) => void | TypedPropertyDescriptor<(req: any) => string> {
 //   throw new Error('Function not implemented.');
