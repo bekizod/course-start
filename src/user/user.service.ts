@@ -128,7 +128,7 @@ this.transporter = nodemailer.createTransport({
   }
 
   async create(createUserDto: CreateUserDto) {
-    // Check if user already exists
+    // Check if user is already exists
     const existingUser = await this.findByEmail(createUserDto.email);
     if (existingUser) {
       throw new ConflictException('Email already in use');
