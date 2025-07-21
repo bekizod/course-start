@@ -9,7 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { BlogModule } from './blog/blog.module';
 import { CommentsModule } from './comment/comment.module';
-
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -24,6 +24,7 @@ import { CommentsModule } from './comment/comment.module';
     AuthModule,
     BlogModule,
     CommentsModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],
