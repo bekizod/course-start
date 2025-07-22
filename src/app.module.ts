@@ -10,6 +10,9 @@ import { ConfigModule } from '@nestjs/config';
 import { BlogModule } from './blog/blog.module';
 import { CommentsModule } from './comment/comment.module';
 import { AdminModule } from './admin/admin.module';
+import { CloudinaryProvider } from './cloudinary/cloudinary.module';
+import { CloudinaryService } from './cloudinary/cloudinary.service';
+import { ImagesController } from './images/images.controller';
 
 @Module({
   imports: [
@@ -26,7 +29,8 @@ import { AdminModule } from './admin/admin.module';
     CommentsModule,
     AdminModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, ImagesController],
+  providers: [AppService, CloudinaryProvider, CloudinaryService],
+  exports: [CloudinaryService],
 })
 export class AppModule {}
