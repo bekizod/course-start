@@ -11,9 +11,11 @@ import { JwtModule } from '@nestjs/jwt';
 import jwtConfig from './config/jwt.config';
 import { ConfigModule } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import refreshJwtConfig from './config/refresh-jwt.config';
 import { RefreshJwtStrategy } from './strategies/refresh-strategy';
+import { JwtAuthGuard } from './guards/jwt-auth/jwt-auth.guard';
+import { RolesGuard } from './guards/roles/roles.guard';
 // import jwtConfig from './config/jwt.config';
 // import { ConfigModule } from '@nestjs/config';
 // import { JwtStrategy } from './strategies/jwt.strategy';
@@ -25,14 +27,13 @@ import { RefreshJwtStrategy } from './strategies/refresh-strategy';
     TypeOrmModule.forFeature([User]),
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
     JwtModule.registerAsync(jwtConfig.asProvider()),
-     ConfigModule.forFeature(jwtConfig),
-     ConfigModule.forFeature(refreshJwtConfig),
+    ConfigModule.forFeature(jwtConfig),
+    ConfigModule.forFeature(refreshJwtConfig),
   ],
   controllers: [AuthController],
   providers: [
-
-
-    {provide: APP_PIPE,
+    {
+      provide: APP_PIPE,
       useValue: new ValidationPipe({
         whitelist: true,
         transform: true,
@@ -40,23 +41,22 @@ import { RefreshJwtStrategy } from './strategies/refresh-strategy';
           enableImplicitConversion: true, // Crucial for params
         },
         disableErrorMessages: false,
-      })},
+      }),
+    },
     AuthService,
     UserService,
     LocalStrategy,
     JwtStrategy,
-    RefreshJwtStrategy
+    RefreshJwtStrategy,
 
-
-
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: JwtAuthGuard, //@UseGuards(JwtAuthGuard) applied on all API endppints
-    // },
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: RolesGuard,
-    // },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard, //@UseGuards(JwtAuthGuard) applied on all API endppints
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
   ],
 })
 export class AuthModule {}

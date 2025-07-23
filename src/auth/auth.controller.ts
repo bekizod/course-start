@@ -19,6 +19,7 @@ import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { RefreshAuthGuard } from './guards/refresh-auth/refresh-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth/jwt-auth.guard';
+import { Public } from './decorators/public.decorator';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -35,6 +36,7 @@ export class AuthController {
     status: HttpStatus.CONFLICT,
     description: 'Username or email already exists',
   })
+  @Public()
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
     return this.authService.register(createUserDto);
@@ -54,49 +56,48 @@ export class AuthController {
     status: HttpStatus.UNAUTHORIZED,
     description: 'Invalid credentials',
   })
+  @Public()
   @ApiBody({ type: LoginDto })
   @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard) // Keep the guard
   @Post('login')
   login(@Request() req) {
-    return this.authService.login(req.user.id); 
+    return this.authService.login(req.user.id);
   }
-
 
   @UseGuards(RefreshAuthGuard)
   @Post('refresh')
-  refreshToken(@Req() req){
-  return this.authService.refreshToken(req.user.id)
+  refreshToken(@Req() req) {
+    return this.authService.refreshToken(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('logout')
-  signOut(@Req() req){
-    this.authService.signOut(req.user.id)
+  signOut(@Req() req) {
+    this.authService.signOut(req.user.id);
   }
 
-
   @Post('forgot-password')
-@ApiOperation({ summary: 'Request password reset OTP' })
-@ApiResponse({
-  status: HttpStatus.OK,
-  description: 'OTP sent successfully',
-})
-async forgotPassword(@Body('email') email: string) {
-  return this.authService.sendPasswordResetOtp(email);
-}
+  @ApiOperation({ summary: 'Request password reset OTP' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'OTP sent successfully',
+  })
+  async forgotPassword(@Body('email') email: string) {
+    return this.authService.sendPasswordResetOtp(email);
+  }
 
-@Post('reset-password')
-@ApiOperation({ summary: 'Reset password with OTP' })
-@ApiResponse({
-  status: HttpStatus.OK,
-  description: 'Password reset successful',
-})
-async resetPassword(
-  @Body('email') email: string,
-  @Body('otp') otp: string,
-  @Body('newPassword') newPassword: string,
-) {
-  return this.authService.resetPasswordWithOtp(email, otp, newPassword);
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password with OTP' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Password reset successful',
+  })
+  async resetPassword(
+    @Body('email') email: string,
+    @Body('otp') otp: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    return this.authService.resetPasswordWithOtp(email, otp, newPassword);
+  }
 }
-} 

@@ -23,15 +23,19 @@ import { Response } from 'express';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/auth/enums/role.enum';
 import { RolesGuard } from 'src/auth/guards/roles/roles.guard';
+import { Public } from 'src/auth/decorators/public.decorator';
+@Roles(Role.USER)
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post('/register')
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
-  }
+  // @Public()
+  // @Post('/register')
+  // create(@Body() createUserDto: CreateUserDto) {
+  //   return this.userService.create(createUserDto);
+  // }
 
+  @Public()
   @Get('verify-email')
   async verifyEmail(@Query('token') token: string, @Res() res: Response) {
     const isVerified = await this.userService.verifyEmail(token);
@@ -79,7 +83,6 @@ export class UserController {
     return res.status(200).send(successHtml);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('profile')
   getProfile(@Req() req) {
     return this.userService.findOne(req.user.id);
@@ -98,8 +101,8 @@ export class UserController {
 
   // @SetMetadata('role', 'ADMIN')
   @Roles(Role.ADMIN)
-  @UseGuards(RolesGuard)
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(RolesGuard)
+  // @UseGuards(JwtAuthGuard)
   @Delete('/deleteUser/:id')
   remove(@Param('id') id: string) {
     return this.userService.remove(+id);
