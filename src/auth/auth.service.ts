@@ -273,6 +273,12 @@ export class AuthService {
 
     return currentUser;
   }
+
+  async validateGoogleUser(googleUser: CreateUserDto) {
+    const user = await this.userService.findByEmail(googleUser.email);
+    if (user) return user;
+    return await this.userService.googleCreate(googleUser);
+  }
   async signOut(userId) {
     await this.userService.updateHasedRefreshToken(userId, null);
     return ResponseFormat.success('Login Out successfully');

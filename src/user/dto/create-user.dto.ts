@@ -1,11 +1,8 @@
 /* eslint-disable prettier/prettier */
-import { IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, IsUrl } from 'class-validator';
 import { PrimaryGeneratedColumn } from 'typeorm';
 
 export class CreateUserDto {
-  @PrimaryGeneratedColumn()
-  id: number;
-  // @IsOptional()
   @IsString()
   firstName?: string;
   // @IsOptional()
@@ -15,9 +12,18 @@ export class CreateUserDto {
   @IsString()
   userName: string;
 
-   @IsString()
+  @IsString()
   email: string;
 
   @IsString()
+  @IsUrl()
+  @IsOptional()
+  avatarUrl?: string;
+
+  @IsString()
   password: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isVerified?: boolean;
 }

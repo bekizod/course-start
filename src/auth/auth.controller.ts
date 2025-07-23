@@ -10,6 +10,8 @@ import {
   UseGuards,
   Request,
   Req,
+  Get,
+  Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth/local-auth.guard';
@@ -20,6 +22,7 @@ import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { RefreshAuthGuard } from './guards/refresh-auth/refresh-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth/jwt-auth.guard';
 import { Public } from './decorators/public.decorator';
+import { GoogleAuthGuard } from './guards/google-auth/google-auth.guard';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -77,6 +80,18 @@ export class AuthController {
     this.authService.signOut(req.user.id);
   }
 
+  @Public()
+  @UseGuards(GoogleAuthGuard)
+  @Get('google/login')
+  googleLogin() {}
+
+  @Public()
+  @UseGuards(GoogleAuthGuard)
+  @Get('google/callback')
+  async googleCallback(@Req() req, @Res() res) {
+    const response = await this.authService.login(req.user.id);
+    res.redirect(`http://localhost:5173?token=${response.data?.accessToken}`);
+  }
   @Post('forgot-password')
   @ApiOperation({ summary: 'Request password reset OTP' })
   @ApiResponse({

@@ -1,6 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
 
 export class ResponseFormat<T> {
+  [x: string]: any;
   status: 'success' | 'error';
   message: string;
   data?: T;
@@ -26,7 +27,7 @@ export class ResponseFormat<T> {
         total: number;
         totalPages: number;
       };
-    }
+    },
   ) {
     this.status = status;
     this.message = message;
@@ -45,7 +46,7 @@ export class ResponseFormat<T> {
         total: number;
         totalPages: number;
       };
-    }
+    },
   ): ResponseFormat<T> {
     return new ResponseFormat<T>('success', message, options);
   }
@@ -60,7 +61,7 @@ export class ResponseFormat<T> {
         total: number;
         totalPages: number;
       };
-    }
+    },
   ): ResponseFormat<T> {
     return new ResponseFormat<T>('error', message, options);
   }
@@ -73,7 +74,7 @@ export class ResponseFormat<T> {
       limit: number;
       total: number;
       totalPages: number;
-    }
+    },
   ): ResponseFormat<T> {
     return new ResponseFormat<T>('success', message, { data, pagination });
   }

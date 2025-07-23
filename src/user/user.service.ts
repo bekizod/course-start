@@ -158,6 +158,11 @@ export class UserService {
     );
   }
 
+  async googleCreate(createUserDto: CreateUserDto) {
+    const user = await this.UserRepo.create(createUserDto);
+    return await this.UserRepo.save(user);
+  }
+
   async updatePassword(email: string, updatePassword: string) {
     // Hash the new password before storing
     const hashedPassword = await hash(updatePassword, 10);
