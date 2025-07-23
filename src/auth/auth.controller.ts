@@ -90,7 +90,9 @@ export class AuthController {
   @Get('google/callback')
   async googleCallback(@Req() req, @Res() res) {
     const response = await this.authService.login(req.user.id);
-    res.redirect(`http://localhost:5173?token=${response.data?.accessToken}`);
+    res.redirect(
+      `http://localhost:5173?token=${response.data?.accessToken}&refreshToken=${response.data?.refreshToken}`,
+    );
   }
   @Post('forgot-password')
   @ApiOperation({ summary: 'Request password reset OTP' })
